@@ -4,13 +4,13 @@ import random
 
 
 def register_account(user):
-    bank = input("은행명을 입력하세요: ")
-    account_number = input("계좌번호를 입력하세요: ")
+    bank = input("Enter bank name: ")
+    account_number = input("Enter account number: ")
     if user['account'] and user['account']['number'] == account_number:
-        print("동일한 계좌가 이미 등록되어 있습니다.")
+        print("The same account is already registered.")
     else:
         user['account'] = {'bank': bank, 'number': account_number}
-        print("계좌가 등록되었습니다.")
+        print("The account has been registered.")
     main_menu(user)
 
 
@@ -22,30 +22,30 @@ def verify_account(user):
 
 def charge_balance(user, amount):
     user['balance'] += amount
-    print(f"충전 완료. 현재 잔액은 {user['balance']}원입니다.")
+    print(f"Charge complete. Current balance is {user['balance']}.")
 
 
 def ensure_balance(user, amount):
     while user['balance'] < amount:
         needed = math.ceil((amount - user['balance']) / 1000) * 1000
-        print(f"필요한 금액은 {needed}원입니다.")
-        amount = int(input("충전할 금액을 입력하세요: "))
+        print(f"The required amount is {needed}.")
+        amount = int(input("Enter the amount to charge: "))
         while amount < needed:
-            print("충전할 금액이 부족합니다.")
-            amount = int(input('충전할 금액을 입력하세요: '))
+            print("The amount to charge is insufficient.")
+            amount = int(input('Enter the amount to charge: '))
         charge_balance(user, amount)
     return amount
 
 
 def transfer(user, amount, recipient_name, recipient_bank, recipient_account):
-    if input('저장할까요? (y/n): ') == 'y':
-        nickname = input('닉네임을 입력하세요: ')
+    if input('Do you want to save it? (y/n): ') == 'y':
+        nickname = input('Enter a nickname: ')
         if not nickname:
             nickname = len(user['saved_accounts'])
         user['saved_accounts'][nickname] = (recipient_name, recipient_bank, recipient_account)
-        print('저장되었습니다.')
+        print('Saved.')
     user['balance'] -= amount
-    print(f"송금이 완료되었습니다. 남은 잔액은 {user['balance']}원입니다.")
+    print(f"Transfer complete. Remaining balance is {user['balance']}.")
     main_menu(user)
 
 
@@ -54,13 +54,13 @@ def prompt_integer(prompt):
         try:
             return int(input(prompt))
         except ValueError:
-            print("유효한 숫자를 입력해 주세요.")
+            print("Please enter a valid number.")
 
 
 def check_balance(user):
     if not user['account']:
-        print("계좌가 존재하지 않습니다. 지금 계좌를 등록해서 계좌 및 포인트를 조회하세요!")
-        noaccountchoice = input('1. 계좌 등록하기\n2. 메인 메뉴로 돌아가기\n선택: ')
+        print("No account exists. Register an account now to check balance and points!")
+        noaccountchoice = input('1. Register account\n2. Return to main menu\nSelect: ')
         if noaccountchoice == '1':
             register_account(user)
         elif noaccountchoice == '2':
@@ -68,63 +68,63 @@ def check_balance(user):
             return
 
     elif user['balance'] == 0:
-        print('잔액이 없습니다. 충전하시겠습니까?')
-        nobalancechoice = input('1. 충전하기\n2. 메인 메뉴로 돌아가기\n선택: ')
+        print('No balance. Do you want to charge?')
+        nobalancechoice = input('1. Charge\n2. Return to main menu\nSelect: ')
         if nobalancechoice == '1':
             charge_balance_menu(user)
         elif nobalancechoice == '2':
             main_menu(user)
             return
 
-    print(f"\n이름: {user['name']}")
-    print(f"잔액: {user['balance']}원")
-    print(f"등록 계좌: {user['account'] if user['account'] else '없음'}")
-    print(f"보유포인트: {user['points']}p")
+    print(f"\nName: {user['name']}")
+    print(f"Balance: {user['balance']}")
+    print(f"Registered account: {user['account'] if user['account'] else 'None'}")
+    print(f"Points: {user['points']}p")
     main_menu(user)
 
 
 def charge_balance_menu(user):
     if not user['account']:
-        print('계좌가 존재하지 않습니다.')
+        print('No account exists.')
         register_account(user)
-    amount = prompt_integer("충전할 금액을 입력하세요: ")
+    amount = prompt_integer("Enter the amount to charge: ")
     charge_balance(user, amount)
     main_menu(user)
 
 
 def transfer_menu(user):
     if not user['account']:
-        print('계좌가 존재하지 않아 송금이 불가합니다.')
+        print('Cannot transfer without an account.')
         register_account(user)
-    amount = prompt_integer("송금할 금액을 입력하세요: ")
+    amount = prompt_integer("Enter the amount to transfer: ")
     ensure_balance(user, amount)
-    recipient_name = input("송금 받을 사람의 이름: ")
-    recipient_bank = input("송금 받을 사람의 은행명: ")
-    recipient_account = input("송금 받을 사람의 계좌번호: ")
+    recipient_name = input("Recipient's name: ")
+    recipient_bank = input("Recipient's bank: ")
+    recipient_account = input("Recipient's account number: ")
     transfer(user, amount, recipient_name, recipient_bank, recipient_account)
 
 
 def pay(user):
     if not user['account']:
-        print('계좌가 등록되지 않아 결제가 불가합니다.')
+        print('Cannot make payments without a registered account.')
         register_account(user)
-    amount = prompt_integer("결제할 금액을 입력하세요: ")
+    amount = prompt_integer("Enter the amount to pay: ")
     ensure_balance(user, amount)
-    recheck = input(f'결제하시겠습니까? 결제 금액은 {amount}, 적립은 {int(float(amount) * 0.05)}원입니다. (y/n): ')
+    recheck = input(f'Do you want to proceed with the payment? The payment amount is {amount}, and the points earned are {int(float(amount) * 0.05)}p. (y/n): ')
     if recheck.lower() == 'y':
         user['balance'] -= amount
         user['points'] += int(float(amount) * 0.05)
-        print('결제가 완료되었습니다.')
-        print(f'잔액은 {user['balance']}원입니다.')
-        print(f'적립 포인트: {user['points']}p, 보유 포인트: {user['points']}p')
-        addpointyn = input('추가 포인트를 적립하시겠습니까? (y/n): ')
+        print('Payment complete.')
+        print(f"Remaining balance is {user['balance']}.")
+        print(f"Points earned: {user['points']}p, Total points: {user['points']}p")
+        addpointyn = input('Do you want to earn additional points? (y/n): ')
         if addpointyn.lower() == 'y':
-            addpoint = input('임의의 숫자를 입력해주세요...')
+            addpoint = input('Enter any number...')
             random_point = random.randint(1, 100)
-            print(f'축하합니다! {addpoint} 선택 결과 {random_point}p가 추가되었습니다.')
+            print(f'Congratulations! Your selection of {addpoint} resulted in {random_point} additional points.')
             user['points'] += random_point
         elif addpointyn.lower() == 'n':
-            print('메인 메뉴로 돌아갑니다.')
+            print('Returning to the main menu.')
     elif recheck.lower() == 'n':
         main_menu(user)
         return
@@ -140,40 +140,40 @@ def validate_gift_card_number(card_number):
 def register_gift_card(user):
     while True:
         try:
-            card_number = input("기프트카드 번호를 입력하세요 (예: a-1234-5678-901): ")
+            card_number = input("Enter the gift card number (e.g., a-1234-5678-901): ")
             if card_number.lower() == 'q':
-                print('메인 메뉴로 돌아갑니다.')
+                print('Returning to the main menu.')
                 main_menu(user)
                 return
             elif validate_gift_card_number(card_number):
                 prefix = card_number.split('-')[0].lower()
                 amount_map = {'p': 50000, 'q': 30000, 'r': 10000}
                 amount = amount_map.get(prefix, 5000)
-                print(f"이 기프트카드로 {amount}원이 충전됩니다.")
-                confirm = input("등록을 진행하시겠습니까? (y/n): ")
+                print(f"This gift card will charge {amount}.")
+                confirm = input("Do you want to proceed with the registration? (y/n): ")
                 if confirm.lower() == 'y':
                     charge_balance(user, amount)
-                    print(f"기프트카드 등록 완료. 현재 잔액은 {user['balance']}원입니다.")
+                    print(f"Gift card registration complete. Current balance is {user['balance']}.")
                     break
                 else:
-                    print("기프트카드 등록이 취소되었습니다.")
+                    print("Gift card registration canceled.")
                     break
             else:
-                print("잘못된 기프트카드 번호 형식입니다. 올바른 형식으로 입력해주세요.")
+                print("Invalid gift card number format. Please enter in the correct format.")
         except UnicodeDecodeError:
-            print("입력 인코딩에 문제가 발생했습니다. 다시 입력해주세요.")
+            print("Input encoding issue. Please try again.")
     main_menu(user)
 
 
 def main_menu(user):
-    print("\n메인 메뉴")
-    print("1. 잔액 확인")
-    print("2. 충전하기")
-    print("3. 송금하기")
-    print("4. 결제하기")
-    print("5. 기프트카드 등록하기")
-    print("0. 프로그램 종료")
-    choice = input("선택: ")
+    print("\nMain Menu")
+    print("1. Check balance")
+    print("2. Charge balance")
+    print("3. Transfer")
+    print("4. Pay")
+    print("5. Register gift card")
+    print("0. Exit program")
+    choice = input("Select: ")
     if choice == '1':
         check_balance(user)
     elif choice == '2':
@@ -185,13 +185,13 @@ def main_menu(user):
     elif choice == '5':
         register_gift_card(user)
     elif choice == '0':
-        print("프로그램을 종료합니다. 이용해주셔서 감사합니다.")
+        print("Exiting the program. Thank you for using it.")
         sys.exit()
 
 
 def main():
-    print("프로그램을 시작합니다. 사용자의 이름을 입력하세요.")
-    user_name = input("이름: ")
+    print("Starting the program. Please enter the user's name.")
+    user_name = input("Name: ")
     user = {
         'name': user_name,
         'balance': 0,
@@ -199,7 +199,7 @@ def main():
         'points': 0,
         'saved_accounts': {}
     }
-    print(f'환영합니다, {user_name}님!')
+    print(f'Welcome, {user_name}!')
     main_menu(user)
 
 
