@@ -166,13 +166,23 @@ def register_gift_card(user):
 
 
 def main_menu(user):
-    print("\nMain Menu")
-    print("1. Check balance")
-    print("2. Charge balance")
-    print("3. Transfer")
-    print("4. Pay")
-    print("5. Register gift card")
-    print("0. Exit program")
+    # print("\nMain Menu")
+    # print("1. Check balance")
+    # print("2. Charge balance")
+    # print("3. Transfer")
+    # print("4. Pay")
+    # print("5. Register gift card")
+    # print("0. Exit program")
+    # choice = input("Select: ")
+    menus = [
+    '1. Check My Status',
+    '2. Top Up',
+    '3. Send Money',
+    '4. Pay',
+    '5. Register Gift Card',
+    '0. Quit Program'
+    ]
+    print(*menus, sep='\n') 
     choice = input("Select: ")
     if choice == '1':
         check_balance(user)
