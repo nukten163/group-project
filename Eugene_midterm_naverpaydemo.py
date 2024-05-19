@@ -1,7 +1,23 @@
 import sys
 import math
 import random
+from tabulate import tabulate
+import datetime
 
+today = str(datetime.date.today())
+
+def add_operation(user, message: str):
+    balance = user['balance']
+    points = user['points']
+    user['activity_log'].append([today, user['account'], message, balance, points])
+
+def all_activity(user):
+    if len(user['activity_log']) == 0:
+        print('No activity detected')
+    else:
+        print(f'All {user["name"]} activity: ')
+        print(tabulate(user["activity_log"], headers=['Date', 'Account', 'Operation', 'Balance', 'Point']))
+    main_menu()
 
 def register_account(user):
     bank = input("Enter bank name: ")
@@ -10,20 +26,19 @@ def register_account(user):
         print("The same account is already registered.")
     else:
         user['account'] = {'bank': bank, 'number': account_number}
+        add_operation(user, 'Account Registered')
         print("The account has been registered.")
-    main_menu(user)
-
+    main_menu()
 
 def verify_account(user):
     if not user['account']:
         register_account(user)
     return True
 
-
 def charge_balance(user, amount):
     user['balance'] += amount
+    add_operation(user, 'Balance is charged')
     print(f"Charge complete. Current balance is {user['balance']}.")
-
 
 def ensure_balance(user, amount):
     while user['balance'] < amount:
@@ -36,7 +51,6 @@ def ensure_balance(user, amount):
         charge_balance(user, amount)
     return amount
 
-
 def transfer(user, amount, recipient_name, recipient_bank, recipient_account):
     if input('Do you want to save it? (y/n): ') == 'y':
         nickname = input('Enter a nickname: ')
@@ -45,9 +59,9 @@ def transfer(user, amount, recipient_name, recipient_bank, recipient_account):
         user['saved_accounts'][nickname] = (recipient_name, recipient_bank, recipient_account)
         print('Saved.')
     user['balance'] -= amount
+    add_operation(user, 'Transfer')
     print(f"Transfer complete. Remaining balance is {user['balance']}.")
-    main_menu(user)
-
+    main_menu()
 
 def prompt_integer(prompt):
     while True:
@@ -56,7 +70,6 @@ def prompt_integer(prompt):
         except ValueError:
             print("Please enter a valid number.")
 
-
 def check_balance(user):
     if not user['account']:
         print("No account exists. Register an account now to check balance and points!")
@@ -64,7 +77,7 @@ def check_balance(user):
         if noaccountchoice == '1':
             register_account(user)
         elif noaccountchoice == '2':
-            main_menu(user)
+            main_menu()
             return
 
     elif user['balance'] == 0:
@@ -73,15 +86,14 @@ def check_balance(user):
         if nobalancechoice == '1':
             charge_balance_menu(user)
         elif nobalancechoice == '2':
-            main_menu(user)
+            main_menu()
             return
 
     print(f"\nName: {user['name']}")
     print(f"Balance: {user['balance']}")
     print(f"Registered account: {user['account'] if user['account'] else 'None'}")
     print(f"Points: {user['points']}p")
-    main_menu(user)
-
+    main_menu()
 
 def charge_balance_menu(user):
     if not user['account']:
@@ -89,8 +101,7 @@ def charge_balance_menu(user):
         register_account(user)
     amount = prompt_integer("Enter the amount to charge: ")
     charge_balance(user, amount)
-    main_menu(user)
-
+    main_menu()
 
 def transfer_menu(user):
     if not user['account']:
@@ -102,7 +113,7 @@ def transfer_menu(user):
     recipient_bank = input("Recipient's bank: ")
     recipient_account = input("Recipient's account number: ")
     transfer(user, amount, recipient_name, recipient_bank, recipient_account)
-
+    add_operation(user, 'Transfer')
 
 def pay(user):
     if not user['account']:
@@ -126,9 +137,11 @@ def pay(user):
         elif addpointyn.lower() == 'n':
             print('Returning to the main menu.')
     elif recheck.lower() == 'n':
-        main_menu(user)
+        main_menu()
         return
-    main_menu(user)
+
+    add_operation(user, 'Payment')
+    main_menu()
 
 
 def validate_gift_card_number(card_number):
@@ -143,7 +156,7 @@ def register_gift_card(user):
             card_number = input("Enter the gift card number (e.g., a-1234-5678-901): ")
             if card_number.lower() == 'q':
                 print('Returning to the main menu.')
-                main_menu(user)
+                main_menu()
                 return
             elif validate_gift_card_number(card_number):
                 prefix = card_number.split('-')[0].lower()
@@ -162,42 +175,33 @@ def register_gift_card(user):
                 print("Invalid gift card number format. Please enter in the correct format.")
         except UnicodeDecodeError:
             print("Input encoding issue. Please try again.")
-    main_menu(user)
+    add_operation(user, 'Gift card created')
+    main_menu()
 
+def create_menu(options):
+    def menu():
+        print("\nMain Menu")
+        for key, value in options.items():
+            print(f"{key}. {value['description']}")
+        choice = input("Select an option: ")
+        if choice in options:
+            options[choice]['function']()  # Execute the function
+        else:
+            print("Invalid option, please try again.")
+            menu()  # show the menu again if invalid input
+    return menu
 
-def main_menu(user):
-    # print("\nMain Menu")
-    # print("1. Check balance")
-    # print("2. Charge balance")
-    # print("3. Transfer")
-    # print("4. Pay")
-    # print("5. Register gift card")
-    # print("0. Exit program")
-    # choice = input("Select: ")
-    menus = [
-    '1. Check My Status',
-    '2. Top Up',
-    '3. Send Money',
-    '4. Pay',
-    '5. Register Gift Card',
-    '0. Quit Program'
-    ]
-    print(*menus, sep='\n') 
-    choice = input("Select: ")
-    if choice == '1':
-        check_balance(user)
-    elif choice == '2':
-        charge_balance_menu(user)
-    elif choice == '3':
-        transfer_menu(user)
-    elif choice == '4':
-        pay(user)
-    elif choice == '5':
-        register_gift_card(user)
-    elif choice == '0':
-        print("Exiting the program. Thank you for using it.")
-        sys.exit()
-
+def setup_main_menu(user):
+    options = {
+        '1': {'description': 'Check My Status', 'function': lambda: check_balance(user)},
+        '2': {'description': 'Top Up', 'function': lambda: charge_balance_menu(user)},
+        '3': {'description': 'Send Money', 'function': lambda: transfer_menu(user)},
+        '4': {'description': 'Pay', 'function': lambda: pay(user)},
+        '5': {'description': 'Register Gift Card', 'function': lambda: register_gift_card(user)},
+        '6': {'description': 'See All Activity', 'function': lambda: all_activity(user)},
+        '0': {'description': 'Quit', 'function': lambda: sys.exit()}
+    }
+    return create_menu(options)
 
 def main():
     print("Starting the program. Please enter the user's name.")
@@ -207,10 +211,16 @@ def main():
         'balance': 0,
         'account': None,
         'points': 0,
-        'saved_accounts': {}
+        'saved_accounts': {},
+        'activity_log': []
     }
     print(f'Welcome, {user_name}!')
-    main_menu(user)
+    global main_menu
+    main_menu = setup_main_menu(user)
+    main_menu()
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
